@@ -54,7 +54,10 @@ class BottomNavScreenState extends State<BottomNavScreen> {
               showExitConfirmationDialog(context);
             },
           ),
-          title: Text(returnTitle(context, _selectedIndex)),
+          title: Text(returnTitle(context, _selectedIndex), style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w700
+          ),),
           centerTitle: true,
           actions: [
             _selectedIndex == 1
@@ -171,7 +174,7 @@ String returnTitle(BuildContext context, int index) {
 
   switch (index) {
     case 1:
-      title = isPremium ? "VIP Tips" : "Enjoy the exclusive benefits!";
+      title = isPremium ? "VIP Tips" : "Go Premium";
       break;
     case 2:
       title = "Settings";
