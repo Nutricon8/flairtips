@@ -1,5 +1,6 @@
 import 'package:flairtips/models/tip.dart';
 import 'package:flairtips/utils/api_service.dart';
+import 'package:flairtips/utils/predictions_utils.dart';
 import 'package:flairtips/utils/user_provider.dart';
 import 'package:flairtips/widgets/ScrollDate.dart';
 import 'package:flairtips/widgets/league_card.dart';
@@ -93,8 +94,10 @@ class _TipsScreenState extends State<TipsScreen> {
     _tips.addAll(uniqueTips);
 
     for (var tip in uniqueTips) {
-      final league = tip.leagueName.trim().toLowerCase();
-      _groupedTips.putIfAbsent(league, () => []).add(tip);
+      // FIXED: Create a COMPOSITE key with country + league name
+      // This ensures "England|Premier League" and "Bahrain|Premier League" are separate
+      final compositeKey = '${tip.country}|${tip.leagueName}';
+      _groupedTips.putIfAbsent(compositeKey, () => []).add(tip);
     }
   }
 
@@ -119,7 +122,9 @@ class _TipsScreenState extends State<TipsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final groupedTipsKeys = _groupedTips.keys.toList();
+    // Group tips properly
+    final groupedTips = groupTipsByLeague(_tips);
+    final groupedTipsKeys = groupedTips.keys.toList();
 
     return Scaffold(
       appBar: PreferredSize(
@@ -155,13 +160,17 @@ class _TipsScreenState extends State<TipsScreen> {
                     );
                   }
 
-                  final leagueName = groupedTipsKeys[index];
-                  final tipsInLeague = _groupedTips[leagueName]!;
+                  final compositeKey = groupedTipsKeys[index];
+                  final tipsInLeague = groupedTips[compositeKey]!;
                   final logoTip = tipsInLeague.firstWhere(
                     (tip) => tip.leagueLogo.isNotEmpty,
                     orElse: () => tipsInLeague.first,
                   );
-                  final countryName = logoTip.country;
+
+                  // Split the composite key
+                  final parts = compositeKey.split('|');
+                  final countryName = parts[0];
+                  final leagueName = parts[1];
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(

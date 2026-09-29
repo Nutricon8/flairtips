@@ -6,14 +6,14 @@ import 'package:flairtips/widgets/match_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class VipTipsScreen extends StatefulWidget {
-  const VipTipsScreen({super.key});
+class VipTipsScreenmmm extends StatefulWidget {
+  const VipTipsScreenmmm({super.key});
 
   @override
-  State<VipTipsScreen> createState() => _VipTipsScreenState();
+  State<VipTipsScreenmmm> createState() => _VipTipsScreenState();
 }
 
-class _VipTipsScreenState extends State<VipTipsScreen> {
+class _VipTipsScreenState extends State<VipTipsScreenmmm> {
   String selectedDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
   final GlobalKey _dateScrollWidgetKey = GlobalKey();
   late Future<List<Tip>> _tipsFuture;
@@ -148,14 +148,29 @@ class _VipTipsScreenState extends State<VipTipsScreen> {
 
   Map<String, List<Tip>> _groupTipsByLeagueName(List<Tip> tips) {
     final Map<String, List<Tip>> grouped = {};
+
     for (var tip in tips) {
-      final league = tip.leagueName;
-      if (!grouped.containsKey(league)) {
-        grouped[league] = [];
-      }
-      grouped[league]!.add(tip);
+      // Create a unique key with countryId + country + leagueName
+      // This ensures "England|Premier League" and "Bahrain|Premier League" are separate
+      final uniqueKey = '${tip.countryId}|${tip.country}|${tip.leagueName}';
+      grouped.putIfAbsent(uniqueKey, () => []).add(tip);
     }
-    return grouped;
+
+    // Sort the groups by country, then league
+    final sortedKeys =
+        grouped.keys.toList()..sort((a, b) {
+          final aParts = a.split('|');
+          final bParts = b.split('|');
+
+          // Sort by country first, then league
+          final countryCompare = aParts[1].compareTo(bParts[1]);
+          if (countryCompare != 0) return countryCompare;
+          return aParts[2].compareTo(bParts[2]);
+        });
+
+    return Map.fromEntries(
+      sortedKeys.map((key) => MapEntry(key, grouped[key]!)),
+    );
   }
 
   Size _getAppBarSize() {

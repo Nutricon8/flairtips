@@ -26,31 +26,26 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       centerTitle: true,
       actions: [
-        !tip.isPlayed || tip.playing.toUpperCase() == "UPCOMING"
-            ? Container(
-              width: 41.0,
-              height: 20.0,
-              margin: EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.red, // Set the background color to red
-                borderRadius: BorderRadius.circular(
-                  20.0,
-                ), // Set the border radius
-              ),
-              child: Center(
-                child: Text(
-                  "TBD",
-                  style: TextStyle(
-                    color:
-                        Colors
-                            .white, // Text color to contrast with the red background
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12.0, // Adjust font size if needed
-                  ),
-                ),
-              ),
-            )
-            : SizedBox.shrink(),
+        Container(
+  // Remove width: 41.0 to make it fit content
+  height: 20.0,
+  margin: EdgeInsets.only(right: 8),
+  padding: EdgeInsets.symmetric(horizontal: 12), // Changed from margin to padding
+  decoration: BoxDecoration(
+    color: Colors.red,
+    borderRadius: BorderRadius.circular(20.0),
+  ),
+  child: Center(
+    child: Text(
+      tip.playing.toUpperCase(),
+      style: TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+        fontSize: 12.0,
+      ),
+    ),
+  ),
+)
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(100.0),

@@ -1,3 +1,6 @@
+import 'package:flairtips/screens/forgot_password_screen.dart.dart';
+import 'package:flairtips/screens/new_password_screen.dart';
+import 'package:flairtips/screens/reset_code_screen.dart';
 import 'package:flairtips/utils/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flairtips/screens/bottom_nav.dart';
@@ -5,7 +8,7 @@ import 'package:flairtips/screens/onboarding_screen.dart';
 import 'package:flairtips/screens/sign_in_screen.dart';
 import 'package:flairtips/screens/sign_up_screen.dart';
 import 'package:flairtips/utils/colors.dart';
-import 'package:flairtips/utils/theme_provider.dart';
+import 'package:flairtips/utils/theme_provider.dart'; 
 import 'package:provider/provider.dart';
 
 const String taskKey = "fetch_shared_prefs_task";
@@ -193,7 +196,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
           iconTheme: IconThemeData(color: lightColorScheme.onSurface, size: 24),
         ),
 
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: lightColorScheme.surface,
           elevation: 2,
           shape: RoundedRectangleBorder(
@@ -348,7 +351,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
           iconTheme: IconThemeData(color: darkColorScheme.onSurface),
         ),
 
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: darkColorScheme.onSecondary,
           elevation: 2,
           shape: RoundedRectangleBorder(
@@ -402,6 +405,20 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
             break;
           case '/register':
             page = SignUpScreen();
+            break;
+          case '/forgot-password':
+            page = ForgotPasswordScreen();
+            break;
+          case '/reset-code':
+            final args = settings.arguments as Map<String, dynamic>;
+            page = ResetCodeScreen(email: args['email']);
+            break;
+          case '/new-password':
+            final args = settings.arguments as Map<String, dynamic>;
+            page = NewPasswordScreen(
+              resetCode: args['resetCode'],
+              email: args['email'],
+            );
             break;
           case '/main':
             page = BottomNavScreen();

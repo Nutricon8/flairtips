@@ -18,7 +18,7 @@ class VipTips extends StatefulWidget {
 class _VipTipsState extends State<VipTips> {
   String selectedDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
   final ScrollController _scrollController = ScrollController();
-  final GlobalKey _ScrollDateKey = GlobalKey();
+  final GlobalKey _scrollDateKey = GlobalKey();
 
   final List<Tip> _tips = [];
   bool _isFetchingMore = false;
@@ -49,10 +49,12 @@ class _VipTipsState extends State<VipTips> {
 
   void _fetchTips({bool reset = true}) async {
     if (reset) {
-      _tips.clear();
-      _currentPage = 1;
-      _hasMore = true;
-      isLoading = true;
+      setState(() {
+        _tips.clear();
+        _currentPage = 1;
+        _hasMore = true;
+        isLoading = true;
+      });
     }
 
     getTips(true, selectedDate, _currentPage)
@@ -99,9 +101,8 @@ class _VipTipsState extends State<VipTips> {
 
   @override
   Widget build(BuildContext context) {
-    final uniqueTips =
-        _tips.toSet().toList(); // quick Dart deduplication by object
-    final groupedTips = _groupTipsByLeagueName(_deduplicateTips(uniqueTips));
+    // Group tips properly
+    final groupedTips = _groupTipsByLeagueName(_tips);
 
     return Scaffold(
       appBar: PreferredSize(
@@ -110,7 +111,7 @@ class _VipTipsState extends State<VipTips> {
           bottom: PreferredSize(
             preferredSize: _getAppBarSize(),
             child: ScrollDate(
-              key: _ScrollDateKey,
+              key: _scrollDateKey,
               onDateSelected: (date) {
                 final parsed = DateFormat('yyyy-MM-dd').parse(date);
                 setState(() {
@@ -125,18 +126,23 @@ class _VipTipsState extends State<VipTips> {
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
-              : groupedTips.isEmpty
+              : _tips.isEmpty
               ? const Center(child: Text('No tips available for this date'))
               : ListView(
                 controller: _scrollController,
                 children: [
                   ...groupedTips.entries.map((entry) {
-                    final leagueName = entry.key;
+                    final compositeKey = entry.key;
                     final tipsInLeague = entry.value;
                     final logoTip = tipsInLeague.firstWhere(
                       (tip) => tip.leagueLogo.isNotEmpty,
                       orElse: () => tipsInLeague.first,
                     );
+
+                    // Split the composite key
+                    final parts = compositeKey.split('|');
+                    final countryName = parts[0];
+                    final leagueName = parts[1];
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(
@@ -147,7 +153,7 @@ class _VipTipsState extends State<VipTips> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           LeagueCard(
-                            countryName: logoTip.country,
+                            countryName: countryName,
                             leagueName: leagueName,
                             leagueLogo: logoTip.leagueLogo,
                           ),
@@ -166,32 +172,52 @@ class _VipTipsState extends State<VipTips> {
     );
   }
 
-  // Update this method if needed
-  Map<String, List<Tip>> _groupTipsByLeagueName(List<Tip> tips) {
+  // Utility function to properly group tips while preserving API order
+  Map<String, List<Tip>> groupTipsByLeague(List<Tip> tips) {
     final Map<String, List<Tip>> grouped = {};
-    for (var tip in tips) {
-      grouped.putIfAbsent(tip.leagueName, () => []).add(tip);
+    final Map<String, int> firstAppearanceIndex =
+        {}; // Track first appearance index
+
+    for (int i = 0; i < tips.length; i++) {
+      final tip = tips[i];
+
+      // Create a UNIQUE key with country ID, country name, and league name
+      final uniqueKey = '${tip.countryId}_${tip.country}_${tip.leagueName}';
+
+      // Also ensure all fields are properly filled
+      final actualCountry = tip.country.isNotEmpty ? tip.country : 'Unknown';
+      final actualLeague =
+          tip.leagueName.isNotEmpty ? tip.leagueName : 'Unknown League';
+
+      final displayKey = '$actualCountry|$actualLeague';
+
+      // Track when this league first appeared
+      if (!firstAppearanceIndex.containsKey(displayKey)) {
+        firstAppearanceIndex[displayKey] = i;
+      }
+
+      grouped.putIfAbsent(displayKey, () => []).add(tip);
     }
-    return grouped;
+
+    // Sort keys by their first appearance index (preserve API order)
+    final sortedKeys =
+        grouped.keys.toList()..sort((a, b) {
+          return firstAppearanceIndex[a]!.compareTo(firstAppearanceIndex[b]!);
+        });
+
+    // Return sorted map
+    return Map.fromEntries(
+      sortedKeys.map((key) => MapEntry(key, grouped[key]!)),
+    );
   }
 
-  List<Tip> _deduplicateTips(List<Tip> tips) {
-    final seenGameIds = <String>{};
-    final uniqueTips = <Tip>[];
-
-    for (final tip in tips) {
-      if (!seenGameIds.contains(tip.id)) {
-        seenGameIds.add(tip.id);
-        uniqueTips.add(tip);
-      }
-    }
-
-    return uniqueTips;
+  Map<String, List<Tip>> _groupTipsByLeagueName(List<Tip> tips) {
+    return groupTipsByLeague(tips);
   }
 
   Size _getAppBarSize() {
     final RenderBox? renderBox =
-        _ScrollDateKey.currentContext?.findRenderObject() as RenderBox?;
+        _scrollDateKey.currentContext?.findRenderObject() as RenderBox?;
     return renderBox?.size ?? const Size.fromHeight(52);
   }
 }

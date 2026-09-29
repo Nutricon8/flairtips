@@ -15,8 +15,27 @@ class MatchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+
+    // Determine what to show for scores
+    final String homeScoreDisplay;
+    final String awayScoreDisplay;
+
+    if (tip.playing == "Finished" || tip.isPlayed) {
+      // Match has finished - show actual scores
+      homeScoreDisplay = tip.homeScore.isNotEmpty ? tip.homeScore : "-";
+      awayScoreDisplay = tip.awayScore.isNotEmpty ? tip.awayScore : "-";
+    } else if (tip.playing == "Upcoming" || !tip.isPlayed) {
+      // Match hasn't started yet - show ""
+      homeScoreDisplay = "";
+      awayScoreDisplay = "";
+    } else {
+      // Fallback or ongoing match - check if we have scores
+      homeScoreDisplay = tip.homeScore.isNotEmpty ? tip.homeScore : "";
+      awayScoreDisplay = tip.awayScore.isNotEmpty ? tip.awayScore : "";
+    }
     return Card(
-      margin: EdgeInsets.all(4), // Remove spacing between cards
+      margin: EdgeInsets.all(4),
+      // Remove spacing between cards
       clipBehavior: Clip.hardEdge,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       color: Colors.transparent,
@@ -53,11 +72,10 @@ class MatchCard extends StatelessWidget {
                     Container(
                       constraints: const BoxConstraints(minHeight: 60),
                       // Ensure a reasonable height
-                      alignment:
-                          Alignment.center, // Center time text vertically
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4.0,
-                      ), // Adjust padding
+                      alignment: Alignment.center,
+                      // Center time text vertically
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      // Adjust padding
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.centerLeft,
@@ -79,19 +97,25 @@ class MatchCard extends StatelessWidget {
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            formatTime(tip.fixtureDate),
-                            style: TextStyle(
-                              fontWeight: FontWeight.w400,
-                              fontSize: 14.0,
-                            ),
-                          ),
+                          // Conditionally show confidence or an expanded SizedBox
+                          tip.confidence.isNotEmpty
+                              ? Text(
+                                tip.confidence,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 14.0,
+                                ),
+                              )
+                              : Expanded(
+                                // ← This expands to take available space when no confidence
+                                child: SizedBox.shrink(),
+                              ),
 
                           SizedBox(
                             width: 60,
-                            height: 35,
+                            height: 40,
                             child: Card(
                               margin: EdgeInsets.all(4.0),
                               clipBehavior: Clip.hardEdge,
@@ -101,7 +125,7 @@ class MatchCard extends StatelessWidget {
                               ),
                               child: Center(
                                 child: Text(
-                                  tip.confidence,
+                                  formatTime(tip.fixtureDate),
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
@@ -145,17 +169,13 @@ class MatchCard extends StatelessWidget {
                                   ),
                                 ],
                               ),
-
-                              tip.homeScore !=
-                                      "" //tip.isScoreUpdated &&
-                                  ? Text(
-                                    tip.homeScore,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  )
-                                  : SizedBox.shrink(),
+                              Text(
+                                homeScoreDisplay,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
                             ],
                           ),
 
@@ -188,16 +208,13 @@ class MatchCard extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              tip.awayScore !=
-                                      "" //tip.isScoreUpdated &&
-                                  ? Text(
-                                    tip.awayScore,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  )
-                                  : SizedBox.shrink(),
+                              Text(
+                                awayScoreDisplay,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -220,14 +237,15 @@ class MatchCard extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                tip.tip,
+                                tip.bestTip.isNotEmpty && tip.bestTip != '-'
+                                    ? tip.bestTip
+                                    : tip.tip,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
                               SizedBox(width: 4),
-
                               /*tip.premium
                                   ? Text("👑")
                                   : */
