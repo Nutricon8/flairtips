@@ -36,4 +36,8 @@ class User {
       'subscription_active': isPremium ? 1 : 0,
     };
   }
+  String get fullName {
+    return '$firstName $lastName';
+  }
+}
 }
