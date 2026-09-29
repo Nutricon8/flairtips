@@ -56,11 +56,31 @@ class LeagueCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Flexible(
-              child: Text(
-                leagueName,
-                overflow: TextOverflow.ellipsis, // Prevents overflow
-                style: TextStyle(fontWeight: FontWeight.w400, fontSize: 12.0),
-              ),
+              child: RichText(
+                overflow: TextOverflow.ellipsis,
+                text: TextSpan(
+                  children: [
+                    if (leagueName.isNotEmpty)
+                      TextSpan(
+                        text: leagueName[0].toUpperCase(), // This makes it capital
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, // This makes it bold
+                          fontSize: 12.0,
+                          color: Theme.of(context).colorScheme.onBackground,
+                        ),
+                      ),
+                    if (leagueName.length > 1)
+                      TextSpan(
+                        text: leagueName.substring(1), // Rest of the text unchanged
+                        style: TextStyle(
+                          fontWeight: FontWeight.w400,
+                          fontSize: 12.0,
+                          color: Theme.of(context).colorScheme.onBackground,
+                        ),
+                      ),
+                  ],
+                ),
+              )
             ),
           ],
         ),
